@@ -7,7 +7,8 @@ global_defs {
 }
 
 vrrp_script chk_health {
-  script '${CHECK_SCRIPT_PATH:-/etc/keepalived/health.sh}'
+  # script '${CHECK_SCRIPT_PATH:-/etc/keepalived/health.sh}'
+  script "/bin/bash -c 'if nc -z ${CHECK_IP:-127.0.0.1} ${CHECK_PORT:-2003}; then exit 0; else exit 1; fi'"
   interval ${CHECK_INTERVAL:-5} 
   fall ${CHECK_FALL:-3}
   rise ${CHECK_RISE:-1}
@@ -41,21 +42,21 @@ vrrp_instance VI_1 {
 }
 EOF
 
-cat << EOF > /etc/keepalived/health.sh
-#!/bin/bash
+# cat << EOF > /etc/keepalived/health.sh
+# #!/bin/bash
 
-if nc -z ${CHECK_IP:-127.0.0.1} ${CHECK_PORT:-2003}
-then
-    echo "$(date) -------> tcp port:${CHECK_PORT:-2003} normal." >> /keepalived.log
-else
-    echo "$(date) ------> switching master node." >> /keepalived.log
-    # /etc/init.d/keepalived stop
-        start-stop-daemon --stop --quiet --pidfile /var/run/keepalived.pid --exec /usr/sbin/keepalived || true
-        exit 1
-fi
-exit 0
-EOF
+# if nc -z ${CHECK_IP:-127.0.0.1} ${CHECK_PORT:-2003}
+# then
+#     echo "$(date) -------> tcp port:${CHECK_PORT:-2003} normal." >> /keepalived.log
+# else
+#     echo "$(date) ------> switching master node." >> /keepalived.log
+#     # /etc/init.d/keepalived stop
+#     # start-stop-daemon --stop --quiet --pidfile /var/run/keepalived.pid --exec /usr/sbin/keepalived || true
+#     exit 1
+# fi
+# exit 0
+# EOF
 
-chmod +x /etc/keepalived/health.sh
+# chmod +x /etc/keepalived/health.sh
 
 /usr/sbin/keepalived -n -l -D -f /etc/keepalived/keepalived.conf
